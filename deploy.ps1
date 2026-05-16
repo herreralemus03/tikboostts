@@ -133,6 +133,35 @@ foreach ($key in $devVars.Keys) {
 Set-Content $configPath $configInjected -Encoding UTF8
 Ok "Placeholders reemplazados en js/config.js"
 
+# ----- 5b) Ocultar seccion de precios si SHOW_PRICING=false ----------------
+$htmlPath   = Join-Path $DeployDir "index.html"
+$htmlOrig   = Get-Content $htmlPath -Raw -Encoding UTF8
+$showPricing = $devVars['SHOW_PRICING']
+if ($showPricing -eq 'false') {
+    Say "SHOW_PRICING=false - eliminando seccion de precios del HTML..."
+    $htmlDeploy = $htmlOrig
+
+    # Quitar bloque entre <!-- PRICING --> y <!-- DOWNLOAD CTA --> (inclusive el marcador PRICING)
+    $htmlDeploy = $htmlDeploy -replace '(?s)[ \t]*<!-- PRICING -->.*?(?=[ \t]*<!-- DOWNLOAD CTA -->)', ''
+
+    # Quitar link "Planes" del navbar y footer
+    $htmlDeploy = $htmlDeploy -replace '\s*<a href="#pricing">Planes</a>', ''
+
+    # Quitar <link> de pricing.css
+    $htmlDeploy = $htmlDeploy -replace '\s*<link rel="stylesheet" href="css/pricing\.css" />', ''
+
+    # Quitar scripts de Paddle (CDN + local)
+    $htmlDeploy = $htmlDeploy -replace '\s*<script src="https://cdn\.paddle\.com[^"]*" async></script>', ''
+    $htmlDeploy = $htmlDeploy -replace '\s*<script src="js/paddle\.js" defer></script>', ''
+    # Quitar comentario de Paddle CDN (linea anterior a los scripts)
+    $htmlDeploy = $htmlDeploy -replace '\s*<!--[^>]*Paddle\.js[^>]*-->', ''
+
+    Set-Content $htmlPath $htmlDeploy -Encoding UTF8
+    Ok "Seccion de precios eliminada del HTML de produccion"
+} else {
+    Ok "SHOW_PRICING=true - seccion de precios incluida"
+}
+
 # ----- 6) Secrets server-side en Cloudflare Pages ----------------------
 # Estos van a las Pages Functions (no al cliente), via wrangler secret put.
 # Solo los que esten en .dev.vars se sincronizan.
@@ -177,14 +206,14 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "wrangler deploy fallo (exit $LASTEXITCODE)" }
 }
 finally {
-    # Restaurar config.js exactamente como esta en git (evita diff de CRLF/LF)
-    git checkout -- js/config.js 2>$null
+    # Restaurar archivos modificados exactamente como estan en git
+    git checkout -- js/config.js index.html 2>$null
     if ($LASTEXITCODE -eq 0) {
-        Ok "js/config.js restaurado desde git (secrets eliminados del disco)"
+        Ok "js/config.js e index.html restaurados desde git"
     } else {
-        # Fallback si git no esta disponible
-        Set-Content $configPath $configOrig -Encoding UTF8 -NoNewline:$false
-        Ok "js/config.js restaurado (fallback Set-Content)"
+        Set-Content $configPath $configOrig -Encoding UTF8
+        Set-Content $htmlPath $htmlOrig -Encoding UTF8
+        Ok "Archivos restaurados (fallback Set-Content)"
     }
     Pop-Location
 }
