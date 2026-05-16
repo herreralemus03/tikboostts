@@ -133,7 +133,28 @@ foreach ($key in $devVars.Keys) {
 Set-Content $configPath $configInjected -Encoding UTF8
 Ok "Placeholders reemplazados en js/config.js"
 
-# ----- 6) Confirmacion de produccion (antes del deploy) ----------------
+# ----- 6) Secrets server-side en Cloudflare Pages ----------------------
+# Estos van a las Pages Functions (no al cliente), via wrangler secret put.
+# Solo los que esten en .dev.vars se sincronizan.
+$serverSecrets = @('PADDLE_WEBHOOK_SECRET', 'PADDLE_PRO_PRICE_ID', 'PADDLE_ELITE_PRICE_ID')
+if ($devVars.Count -gt 0) {
+    Say "Sincronizando secrets server-side con Cloudflare Pages..."
+    foreach ($secretName in $serverSecrets) {
+        if ($devVars.ContainsKey($secretName)) {
+            $val = $devVars[$secretName]
+            # wrangler pages secret put lee el valor de stdin
+            $val | npx --yes wrangler pages secret put $secretName `
+                --project-name $Project 2>&1 | Out-Null
+            if ($LASTEXITCODE -eq 0) {
+                Ok "  $secretName configurado"
+            } else {
+                Warn "  $secretName - no se pudo configurar (puede requerir permiso de cuenta)"
+            }
+        }
+    }
+}
+
+# ----- 6b) Confirmacion de produccion (antes del deploy) ----------------
 if ($Branch -eq "main" -and -not $Yes) {
     Hr
     Warn "Estas por desplegar a PRODUCCION."
@@ -144,6 +165,7 @@ if ($Branch -eq "main" -and -not $Yes) {
 }
 
 # ----- 7) Deploy --------------------------------------------------------
+
 Hr
 Say "Desplegando a Cloudflare Pages..."
 Push-Location $DeployDir
