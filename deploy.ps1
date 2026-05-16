@@ -155,9 +155,15 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "wrangler deploy fallo (exit $LASTEXITCODE)" }
 }
 finally {
-    # Restaurar config.js con placeholders originales (sin secrets)
-    Set-Content $configPath $configOrig -Encoding UTF8
-    Ok "js/config.js restaurado (secrets eliminados del disco)"
+    # Restaurar config.js exactamente como esta en git (evita diff de CRLF/LF)
+    git checkout -- js/config.js 2>$null
+    if ($LASTEXITCODE -eq 0) {
+        Ok "js/config.js restaurado desde git (secrets eliminados del disco)"
+    } else {
+        # Fallback si git no esta disponible
+        Set-Content $configPath $configOrig -Encoding UTF8 -NoNewline:$false
+        Ok "js/config.js restaurado (fallback Set-Content)"
+    }
     Pop-Location
 }
 
