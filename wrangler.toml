@@ -1,0 +1,20 @@
+# Cloudflare Pages — configuración
+# https://developers.cloudflare.com/pages/functions/wrangler-configuration/
+
+name = "tikboostts"
+compatibility_date = "2025-01-01"
+pages_build_output_dir = "."
+
+# D1 — base de datos SQLite en el edge (gratis)
+# Crear con: npx wrangler d1 create tikboostts-subscriptions
+# Luego reemplaza database_id con el ID que devuelva el comando
+[[d1_databases]]
+binding = "DB"
+database_name = "tikboostts-subscriptions"
+database_id = "REPLACE_WITH_D1_ID"
+
+# Secrets — configurar en Cloudflare Pages dashboard:
+#   Settings > Environment variables > Production
+#   PADDLE_WEBHOOK_SECRET = whsec_XXXX
+#   PADDLE_PRO_PRICE_ID   = pri_XXXX
+#   PADDLE_ELITE_PRICE_ID = pri_XXXX
