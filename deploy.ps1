@@ -104,7 +104,36 @@ if ($LASTEXITCODE -ne 0) {
 }
 Ok "Autenticado en Cloudflare"
 
-# ----- 5) Confirmacion de produccion ------------------------------------
+# ----- 5) Inyectar secrets desde .dev.vars en config.js ----------------
+Say "Inyectando secrets en js/config.js desde .dev.vars..."
+$devVarsPath = Join-Path $DeployDir ".dev.vars"
+$configPath  = Join-Path $DeployDir "js/config.js"
+$configOrig  = Get-Content $configPath -Raw -Encoding UTF8
+
+if (-not (Test-Path $devVarsPath)) {
+    Warn ".dev.vars no encontrado - los placeholders __XXXX__ se desplegaran sin reemplazar."
+    $devVars = @{}
+} else {
+    $devVars = @{}
+    Get-Content $devVarsPath | Where-Object { $_ -match '^[A-Z_]+=.+' } | ForEach-Object {
+        $parts      = $_ -split '=', 2
+        $key        = $parts[0].Trim()
+        $val        = $parts[1].Trim()
+        $devVars[$key] = $val
+    }
+    Ok ".dev.vars leido ($($devVars.Count) variables)"
+}
+
+$configInjected = $configOrig
+foreach ($key in $devVars.Keys) {
+    $configInjected = $configInjected -replace "__${key}__", $devVars[$key]
+}
+
+# Escribir config temporal con valores reales
+Set-Content $configPath $configInjected -Encoding UTF8
+Ok "Placeholders reemplazados en js/config.js"
+
+# ----- 6) Confirmacion de produccion (antes del deploy) ----------------
 if ($Branch -eq "main" -and -not $Yes) {
     Hr
     Warn "Estas por desplegar a PRODUCCION."
@@ -114,7 +143,7 @@ if ($Branch -eq "main" -and -not $Yes) {
     }
 }
 
-# ----- 6) Deploy --------------------------------------------------------
+# ----- 7) Deploy --------------------------------------------------------
 Hr
 Say "Desplegando a Cloudflare Pages..."
 Push-Location $DeployDir
@@ -126,6 +155,9 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "wrangler deploy fallo (exit $LASTEXITCODE)" }
 }
 finally {
+    # Restaurar config.js con placeholders originales (sin secrets)
+    Set-Content $configPath $configOrig -Encoding UTF8
+    Ok "js/config.js restaurado (secrets eliminados del disco)"
     Pop-Location
 }
 

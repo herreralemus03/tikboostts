@@ -1,13 +1,14 @@
 // =========================================================
-// TikBoosTTS Landing — configuración central
-// Edita aquí los enlaces de descarga y datos de la app.
+// TikBoosTTS Landing -- configuracion central
+// Los valores sensibles usan placeholders __NOMBRE__
+// que deploy.ps1 reemplaza desde .dev.vars antes de subir.
 // =========================================================
 
 window.TIKBOOSTTS_CONFIG = {
-  // Enlace principal del botón "Descargar APK"
+  // Enlace principal del boton "Descargar APK"
   downloadUrl: "https://cutt.ly/itKjyt4D",
 
-  // Enlace de Google Play (deja "" si todavía no está publicada)
+  // Enlace de Google Play (deja "" si todavia no esta publicada)
   playStoreUrl: "",
 
   // Datos de la app
@@ -15,21 +16,15 @@ window.TIKBOOSTTS_CONFIG = {
   appVersion: "1.0.13",
   minAndroid: "8.0",
 
-  // Si la APK aún no existe, pon esto en false.
+  // Si la APK aun no existe, pon esto en false.
   downloadEnabled: true,
 
-  // ── Paddle Billing ────────────────────────────────────────────────────────
+  // -- Paddle Billing --------------------------------------------------------
+  // Secrets inyectados por deploy.ps1 desde .dev.vars (no commitear valores reales)
   paddle: {
-    // Client-side token: Paddle dashboard > Developer > Authentication > Client-side tokens
-    // Sandbox tokens start with "test_", live tokens with "live_"
-    // NOTE: This looks like an API key (pdl_sdbx_apikey_...), not a client-side token.
-    // Client-side tokens start with "test_" (sandbox) or "live_" (production).
-    // Get the real one: Paddle dashboard > Developer > Authentication > Client-side tokens
-    clientToken: "test_924827fda2724fa2c045664bfda",
-
-    sandbox: true,   // ← cambiar a false en producción
-
-    proPriceId:   "pri_01krqmbpvpmdh00bk32vfbvhet",
-    elitePriceId: "pri_01krqn157drvgp0bm91ydswtyk",
+    clientToken: "__PADDLE_CLIENT_TOKEN__",   // test_XXXX (sandbox) | live_XXXX (prod)
+    sandbox: __PADDLE_SANDBOX__,              // true | false
+    proPriceId:   "__PADDLE_PRO_PRICE_ID__",
+    elitePriceId: "__PADDLE_ELITE_PRICE_ID__",
   },
 };
