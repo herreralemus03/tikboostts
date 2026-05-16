@@ -11,7 +11,7 @@ pages_build_output_dir = "."
 [[d1_databases]]
 binding = "DB"
 database_name = "tikboostts-subscriptions"
-database_id = "REPLACE_WITH_D1_ID"
+database_id = "a8f992fb-5a61-4293-9939-21b84f63c91a"
 
 # Secrets — configurar en Cloudflare Pages dashboard:
 #   Settings > Environment variables > Production
