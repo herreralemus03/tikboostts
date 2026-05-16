@@ -22,7 +22,10 @@ window.TIKBOOSTTS_CONFIG = {
   paddle: {
     // Client-side token: Paddle dashboard > Developer > Authentication > Client-side tokens
     // Sandbox tokens start with "test_", live tokens with "live_"
-    clientToken: "REPLACE_WITH_PADDLE_CLIENT_TOKEN",
+    // NOTE: This looks like an API key (pdl_sdbx_apikey_...), not a client-side token.
+    // Client-side tokens start with "test_" (sandbox) or "live_" (production).
+    // Get the real one: Paddle dashboard > Developer > Authentication > Client-side tokens
+    clientToken: "test_924827fda2724fa2c045664bfda",
 
     sandbox: true,   // ← cambiar a false en producción
 
